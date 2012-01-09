@@ -42,6 +42,16 @@
 (defmacro cell (board x y)
   `(aref ,board ,y ,x))
 
+(defun open-surrounding-cells (game x y)
+  (let ((bomb-num (cell (game-board game) x y))
+        (flag-num (loop FOR (x~ y~) IN (surrounding-cells game x y)
+                        WHEN (eq (cell (game-cell-states game) x~ y~) :flag)
+                        SUM 1)))
+    (when (= bomb-num flag-num)
+      (loop FOR (x~ y~) IN (surrounding-cells game x y)
+            DO (open-cell game x~ y~ nil)))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; exported functions
 (defun init-game (width height)
@@ -92,15 +102,6 @@
                         :key (lambda (pos) 
                                (cell (game-board game) (first pos) (second pos)))))))
   (open-cell game init-x init-y))
-
-(defun open-surrounding-cells (game x y)
-  (let ((bomb-num (cell (game-board game) x y))
-        (flag-num (loop FOR (x~ y~) IN (surrounding-cells game x y)
-                        WHEN (eq (cell (game-cell-states game) x~ y~) :flag)
-                        SUM 1)))
-    (when (= bomb-num flag-num)
-      (loop FOR (x~ y~) IN (surrounding-cells game x y)
-            DO (open-cell game x~ y~ nil)))))
   
 (defun open-cell (game x y &optional (open-surrounding-cells t))
   (ecase (cell (game-cell-states game) x y)
