@@ -7,6 +7,7 @@
            set-pos
            format
            newline
+           formatln
            style))
 (in-package :console)
 
@@ -55,6 +56,10 @@
 (defmacro format (control-string &rest format-arguments)
   `(progn (common-lisp:format +STDOUT+ ,control-string ,@format-arguments)
           (force-output +STDOUT+)))
+
+(defmacro formatln (control-string &rest format-arguments)
+  `(progn (format ,control-string ,@format-arguments)
+          (newline)))
 
 (defun newline ()
   (format "~c~c" #\Newline #\Return))
