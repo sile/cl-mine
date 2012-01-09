@@ -1,5 +1,6 @@
 (defpackage game
   (:use :common-lisp)
+  (:import-from :mine shuffle)
   (:export init-game
            board-width
            board-height
@@ -41,13 +42,6 @@
 (defmacro cell (board x y)
   `(aref ,board ,y ,x))
 
-(defun shuffle (list &aux (ary (coerce list 'vector)) (size (length ary)))
-  (loop REPEAT 2 DO
-    (loop FOR i FROM 0 BELOW size DO
-      (rotatef (aref ary i) (aref ary (random size)))))
-  (coerce ary 'list))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; exported functions
 (defun init-game (width height)
@@ -82,18 +76,21 @@
   (assert (< 0 bomb-count (- (board-size game) 9)))
 
   (let* ((excludes `((,init-x ,init-y) . ,(surrounding-cells game init-x init-y)))
-         (bombs (subseq (shuffle (loop FOR cell FROM 0 BELOW (board-size game) 
-                                       UNLESS (find cell excludes)
-                                       COLLECT cell))
+         (bombs (subseq (shuffle (loop FOR x FROM 0 BELOW (board-width game)
+                                       APPEND
+                                       (loop FOR y FROM 0 BELOW (board-height game)
+                                             FOR pos = `(,x ,y)
+                                             UNLESS (find pos excludes :test #'equal)
+                                             COLLECT pos)))
                         0 bomb-count)))
-    (dolist (bomb bombs)
-      (setf (row-major-aref (game-board game) bomb) :bomb))
+    (loop FOR (x y) IN bombs DO
+      (setf (cell (game-board game) x y) :bomb)))
     
-    (each (cell state :x x :y y) game
-      (unless (eq cell :bomb)
-        (setf cell (count :bomb (surrounding-cells game x y) 
-                          :key (lambda (pos) 
-                                 (cell (game-board game) (first pos) (second pos))))))))
+  (each (cell state :x x :y y) game
+    (unless (eq cell :bomb)
+      (setf cell (count :bomb (surrounding-cells game x y) 
+                        :key (lambda (pos) 
+                               (cell (game-board game) (first pos) (second pos)))))))
   (open-cell game init-x init-y))
 
 (defun open-surrounding-cells (game x y)
@@ -141,7 +138,7 @@
   (each (cell state) game
     (when (and (eq cell :bomb)
                (eq state :open))
-      (return-from finish? (values t :bomb))))
+      (return-from finish? (values t nil))))
     
   (each (cell state) game
     (when (eq state :mask)
@@ -150,4 +147,4 @@
   (when (/= (bomb-count game) (flag-count game))
     (return-from finish? (values nil nil)))
 
-  (values t :clear))
+  (values t t))

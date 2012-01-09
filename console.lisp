@@ -43,6 +43,7 @@
 
 (defun cfmakeraw ()
   (let ((termios (sb-posix::allocate-alien-termios)))
+
     (%cfmakeraw termios)
     (unwind-protect
         (sb-posix::alien-to-termios termios)
@@ -70,12 +71,13 @@
 
 (defun move (direction &optional (delta 1))
   (declare (direction direction))
-  (format "~a~d~a" +ESC+ delta
-          (ecase direction
-            (:up    "A")
-            (:down  "B")
-            (:left  "C")
-            (:right "D"))))
+  (when (plusp delta)
+    (format "~a~d~a" +ESC+ delta
+            (ecase direction
+              (:up    "A")
+              (:down  "B")
+              (:left  "D")
+              (:right "C")))))
 
 (defun clear (&key line)
   (if line
@@ -83,12 +85,16 @@
     (format "~a2J" +ESC+)))
 
 (defun set-pos (x y)
-  (format "~s~d;~dH" +ESC+ x y))
+  (format "~a~d;~dH" +ESC+ y x))
 
 (defmacro with-raw-mode (&body body)
   (let ((old (gensym)))
-    `(let ((,old (sb-posix:tcgetattr +STDIN_FD+)))
-       (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow (cfmakeraw))
-       (unwind-protect
-           (locally ,@body)
-         (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow ,old)))))
+    `(locally
+      (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
+      (let ((,old (sb-posix:tcgetattr +STDIN_FD+)))
+        (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow (cfmakeraw))
+        (unwind-protect
+            (locally 
+             (declare (sb-ext:unmuffle-conditions sb-ext:compiler-note))
+             ,@body)
+          (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow ,old))))))

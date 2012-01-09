@@ -1,0 +1,19 @@
+[概要]
+・端末上で動作するマインスイーパー
+・CommonLisp (SBCLのみ)
+
+[バージョン]
+・0.0.1
+
+[使い方]
+・REPLから
+   $ cd mine-0.0.1
+   $ sbcl
+   > (require :asdf)
+   > (asdf:load-system :mine)
+   > (mine:game WIDTH HEIGHT BOMB_COUNT)
+
+・コマンドから
+   $ cd mine-0.0.1
+   $ make
+   $ ./mine WIDTH HEIGHT BOMB_COUNT
