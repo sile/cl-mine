@@ -52,7 +52,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; exported functions
 (defmacro format (control-string &rest format-arguments)
-  `(common-lisp:format +STDOUT+ ,control-string ,@format-arguments))
+  `(progn (common-lisp:format +STDOUT+ ,control-string ,@format-arguments)
+          (force-output +STDOUT+)))
 
 (defun newline ()
   (format "~c~c" #\Newline #\Return))
@@ -76,8 +77,10 @@
             (:left  "C")
             (:right "D"))))
 
-(defun clear ()
-  (format "~a2J" +ESC+))
+(defun clear (&key line)
+  (if line
+      (format "~a2K" +ESC+)
+    (format "~a2J" +ESC+)))
 
 (defun set-pos (x y)
   (format "~s~d;~dH" +ESC+ x y))
