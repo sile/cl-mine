@@ -3,17 +3,17 @@
 ・CommonLisp (SBCLのみ)
 
 [バージョン]
-・0.0.1
+・0.0.2
 
 [使い方]
 ・REPLから
-   $ cd mine-0.0.1
+   $ cd cl-mine-x.x.x
    $ sbcl
    > (require :asdf)
    > (asdf:load-system :mine)
    > (mine:game WIDTH HEIGHT BOMB_COUNT)
 
 ・コマンドから
-   $ cd mine-0.0.1
+   $ cd cl-mine-x.x.x
    $ make
    $ ./mine WIDTH HEIGHT BOMB_COUNT

@@ -1,9 +1,10 @@
 (in-package :mine)
 
 (defun shuffle (list &aux (ary (coerce list 'vector)) (size (length ary)))
-  (loop REPEAT 2 DO
+  (loop WITH state = (make-random-state t)
+        REPEAT 2 DO
     (loop FOR i FROM 0 BELOW size DO
-      (rotatef (aref ary i) (aref ary (random size)))))
+      (rotatef (aref ary i) (aref ary (random size state)))))
   (coerce ary 'list))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
