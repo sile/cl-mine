@@ -20,9 +20,7 @@
 ;;;;;;;;;;;;;
 ;;; constants
 (defparameter +ESC+ (common-lisp:format nil "~c[" (code-char #8r33)))
-(defparameter +STDIN+ sb-sys:*stdin*)
-(defparameter +STDOUT+ sb-sys:*stdout*)
-(defparameter +STDIN_FD+ (sb-sys:fd-stream-fd +STDIN+))
+(defparameter +STDIN_FD+ (sb-sys:fd-stream-fd sb-sys:*stdin*))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -54,8 +52,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; exported functions
 (defmacro format (control-string &rest format-arguments)
-  `(progn (common-lisp:format +STDOUT+ ,control-string ,@format-arguments)
-          (force-output +STDOUT+)))
+  `(progn (common-lisp:format t ,control-string ,@format-arguments)
+          (force-output)))
 
 (defmacro formatln (control-string &rest format-arguments)
   `(progn (format ,control-string ,@format-arguments)
@@ -97,9 +95,9 @@
     `(locally
       (declare (sb-ext:muffle-conditions sb-ext:compiler-note))
       (let ((,old (sb-posix:tcgetattr +STDIN_FD+)))
-        (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow (cfmakeraw))
         (unwind-protect
             (locally 
              (declare (sb-ext:unmuffle-conditions sb-ext:compiler-note))
+             (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsadrain (cfmakeraw))
              ,@body)
           (sb-posix:tcsetattr +STDIN_FD+ sb-posix:tcsanow ,old))))))
